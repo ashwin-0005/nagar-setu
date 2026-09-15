@@ -194,29 +194,45 @@ n_all = max(len(df), 1)
 p1_breach = int(((df["priority"] == "P1") & (df["is_breach"])).sum())
 n_resolved = int((df["status"] == "resolved").sum())
 
+# ---------- SECTION SELECTOR (must come before nav/hero for f-string refs) ----------
+st.markdown("""
+<style>
+/* Hide the raw radio widget visually — nav links handle selection via JS */
+[data-testid="stRadio"] { display: none !important; }
+</style>""", unsafe_allow_html=True)
+section = st.radio("Section", ["📥 Queue", "📊 Command", "✍️ File"], horizontal=True,
+                    label_visibility="collapsed", key="section")
+# ---------- PROGRESS BAR ----------
+st.markdown("""
+<div class="progress-bar" id="topProgress"></div>
+<script>
+(function(){
+  var bar = document.getElementById('topProgress');
+  if(!bar) return;
+  var h = function(){ var s = window.scrollY, d = document.documentElement.scrollHeight - window.innerHeight; bar.style.width = (d>0 ? Math.min(100, (s/d)*100) : 0) + '%'; };
+  window.addEventListener('scroll', h, {passive:true});
+  h();
+})();
+</script>""", unsafe_allow_html=True)
+
 # ---------- BOLT-STYLE TOP NAV ----------
-ncol0, ncol1, ncol2, ncol3, ncol4 = st.columns([2.2, 1, 1, 1, 1.4])
-with ncol0:
-    st.markdown('<div style="display:flex;align-items:center;gap:10px">'
-                '<div class="brand-mark">🏛️</div>'
-                '<div><div class="brand-name">Nagar Setu</div></div></div>',
-                unsafe_allow_html=True)
-with ncol1:
-    if st.button("Queue", key="nav_q"):
-        st.session_state.section = "📥 Queue"
-        st.rerun()
-with ncol2:
-    if st.button("Command", key="nav_c"):
-        st.session_state.section = "📊 Command"
-        st.rerun()
-with ncol3:
-    if st.button("File", key="nav_f"):
-        st.session_state.section = "✍️ File"
-        st.rerun()
-with ncol4:
-    if st.button("➕ File complaint", key="nav_cta", type="primary"):
-        st.session_state.section = "✍️ File"
-        st.rerun()
+st.markdown(f"""
+<div class="bnav">
+  <div class="brand">
+    <div class="brand-mark">🏛️</div>
+    <div class="brand-name">Nagar Setu</div>
+  </div>
+  <div class="links">
+    <span class="{'active' if section=='📥 Queue' else ''}" onclick="document.querySelector('[data-testid=\\"stRadio\\"] input[value=\\"📥 Queue\\"]')?.click()">📥 Queue</span>
+    <span class="{'active' if section=='📊 Command' else ''}" onclick="document.querySelector('[data-testid=\\"stRadio\\"] input[value=\\"📊 Command\\"]')?.click()">📊 Command</span>
+    <span class="{'active' if section=='✍️ File' else ''}" onclick="document.querySelector('[data-testid=\\"stRadio\\"] input[value=\\"✍️ File\\"]')?.click()">✍️ File</span>
+  </div>
+  <div class="cta-row">
+    <span class="pulse-dot"></span>
+    <span style="font-size:11.5px;color:#6ee7b7;font-weight:600">Zone {zone} LIVE</span>
+  </div>
+</div>""", unsafe_allow_html=True)
+st.markdown('<script>document.querySelectorAll("[data-sec]").forEach(function(e){e.addEventListener("click",function(){var t=this.getAttribute("data-sec");document.querySelectorAll("[data-testid=\"stRadio\"] input[type=\"radio\"]").forEach(function(e){if(e.value===t)e.checked=true})})});</script>', unsafe_allow_html=True)
 
 # ---------- BOLT-STYLE HERO ----------
 st.markdown(f"""
@@ -225,33 +241,36 @@ st.markdown(f"""
   <p class="sub">Turn civic chaos into routed, SLA-tracked action — just describe it. Zone {zone} desk is live.</p>
 </div>
 """, unsafe_allow_html=True)
-with st.form("hero_prompt"):
-    hp = st.text_area("Describe the problem", key="hero_text", label_visibility="collapsed", height=80,
-                      placeholder="Describe the civic problem… e.g. kachra 4 din se nahi utha, Patel Nagar")
-    hrow1, hrow2 = st.columns([3, 1])
-    with hrow1:
-        st.caption("Auto-routes to the right desk · Hindi + English · Photo + GPS ready")
-    with hrow2:
-        go_hero = st.form_submit_button("➤ Route it", type="primary", key="hero_go")
-if go_hero:
-    if hp.strip():
-        st.session_state.my_text = hp.strip()
-        st.session_state.section = "✍️ File"
-        st.rerun()
-    else:
-        st.warning("Describe the problem first — one line is enough.")
-st.caption("or try one:")
-chip_cols = st.columns(4)
-for cc, (clbl, ctxt) in zip(chip_cols, [
-        ("🗑️ Garbage pile", "kachra 4 din se nahi utha, Patel Nagar"),
-        ("💧 No water", "paani nahi aa raha 3 din se"),
-        ("🛣️ Pothole", "pothole on main road near bus stop"),
-        ("💡 Streetlight", "streetlight not working 5 days")]):
-    with cc:
-        if st.button(clbl, key=f"chip_{ctxt[:8]}"):
-            st.session_state.my_text = ctxt
-            st.session_state.section = "✍️ File"
+if section != "✍️ File":
+    st.markdown('<div class="hero-form-wrap">', unsafe_allow_html=True)
+    with st.form("hero_prompt"):
+        hp = st.text_area("Describe the problem", key="hero_text", label_visibility="collapsed", height=80,
+                           placeholder="Describe the civic problem… e.g. kachra 4 din se nahi utha, Patel Nagar")
+        hrow1, hrow2 = st.columns([3, 1])
+        with hrow1:
+            st.caption("Auto-routes to the right desk · Hindi + English · Photo + GPS ready")
+        with hrow2:
+            go_hero = st.form_submit_button("➤ Route it", type="primary", key="hero_go")
+    if go_hero:
+        if hp.strip():
+            st.session_state.my_text = hp.strip()
+            st.session_state._pending_section = "✍️ File"
             st.rerun()
+        else:
+            st.warning("Describe the problem first — one line is enough.")
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.caption("or try one:")
+    chip_cols = st.columns(4)
+    for cc, (clbl, ctxt) in zip(chip_cols, [
+            ("🗑️ Garbage pile", "kachra 4 din se nahi utha, Patel Nagar"),
+            ("💧 No water", "paani nahi aa raha 3 din se"),
+            ("🛣️ Pothole", "pothole on main road near bus stop"),
+            ("💡 Streetlight", "streetlight not working 5 days")]):
+        with cc:
+            if st.button(clbl, key=f"chip_{ctxt[:8]}"):
+                st.session_state.my_text = ctxt
+                st.session_state._pending_section = "✍️ File"
+                st.rerun()
 
 # ---------- TRUST WALL ----------
 st.markdown('<div class="trust"><div class="t-lbl">Built for the departments that fix your city</div>'
@@ -278,9 +297,56 @@ kpi(c3, "🟢 P3 · Routine", n_p3, f"{n_p3 / n_all * 100:.0f}% of queue · lowe
 kpi(c4, "⏰ SLA breached", n_breach, f"of {n_open} still open · auto-escalated", "red", "⏱️")
 kpi(c5, "🔁 Duplicates merged", n_dupe, f"<b class='down'>{n_dupe} repeat visits saved</b>", "indigo", "🧬")
 
-st.write("")
-section = st.radio("Section", ["📥 Queue", "📊 Command", "✍️ File"], horizontal=True,
-                   label_visibility="collapsed", key="section")
+
+# ---------- BOLT-STYLE TOP NAV ----------
+st.markdown(f"""
+<div class="bnav">
+  <div class="brand">
+    <div class="brand-mark">🏛️</div>
+    <div class="brand-name">Nagar Setu</div>
+  </div>
+  <div class="links">
+    <span class="{'active' if section=='📥 Queue' else ''}" data-sec="📥 Queue">📥 Queue</span>
+    <span class="{'active' if section=='📊 Command' else ''}" data-sec="📊 Command">📊 Command</span>
+    <span class="{'active' if section=='✍️ File' else ''}" data-sec="✍️ File">✍️ File</span>
+  </div>
+  <div class="cta-row">
+    <span class="pulse-dot"></span>
+    <span style="font-size:11.5px;color:#6ee7b7;font-weight:600">Zone {zone} LIVE</span>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+# ---------- BOLT-STYLE HERO ----------
+st.markdown(f"""
+<div class="hero-bolt"><div class="hero-glow"></div>
+  <h1>What will you fix today?</h1>
+  <p class="sub">Turn civic chaos into routed, SLA-tracked action — just describe it. Zone {zone} desk is live.</p>
+</div>
+""", unsafe_allow_html=True)
+# ---------- TRUST WALL ----------
+st.markdown('<div class="trust"><div class="t-lbl">Built for the departments that fix your city</div>'
+            '<div class="t-row">'
+            '<span class="t-item">🗑️ Sanitation</span><span class="t-item">💧 Water</span>'
+            '<span class="t-item">🛣️ Roads</span><span class="t-item">💡 Electrical</span>'
+            '<span class="t-item">🚽 Sewerage</span><span class="t-item">🌧️ Drainage</span>'
+            '<span class="t-item">🧾 Revenue</span></div></div>', unsafe_allow_html=True)
+
+# ---------- LIVE TICKER ----------
+tick_items = (f"P1 CRITICAL <b>{n_p1}</b> &nbsp;·&nbsp; <span class='up'>{p1_breach} breached</span>"
+              f" &nbsp;&nbsp; P2 MODERATE <b>{n_p2}</b> &nbsp;&nbsp; P3 ROUTINE <b>{n_p3}</b>"
+              f" &nbsp;&nbsp; OPEN <b>{n_open}</b> &nbsp;&nbsp; RESOLVED <b class='down'>{n_resolved}</b>"
+              f" &nbsp;&nbsp; DUPLICATES MERGED <b>{n_dupe}</b> &nbsp;&nbsp; SLA BREACH <b class='up'>{n_breach}</b>")
+st.markdown(f'<div class="ticker"><div class="ticker-track"><span>{tick_items}</span>'
+            f'<span>{tick_items}</span></div></div>', unsafe_allow_html=True)
+
+# ---------- KPI WALL ----------
+c1, c2, c3, c4, c5 = st.columns(5)
+kpi(c1, "🔴 P1 · Critical", n_p1,
+    f"<b class='up'>{p1_breach} breached</b> — fix first" if p1_breach else "zero breached · holding", "red", "🚨")
+kpi(c2, "🟡 P2 · Moderate", n_p2, f"{n_p2 / n_all * 100:.0f}% of queue · within SLA", "amber", "👁️")
+kpi(c3, "🟢 P3 · Routine", n_p3, f"{n_p3 / n_all * 100:.0f}% of queue · lowest urgency", "green", "📋")
+kpi(c4, "⏰ SLA breached", n_breach, f"of {n_open} still open · auto-escalated", "red", "⏱️")
+kpi(c5, "🔁 Duplicates merged", n_dupe, f"<b class='down'>{n_dupe} repeat visits saved</b>", "indigo", "🧬")
 
 # ================= QUEUE =================
 if section == "📥 Queue":
@@ -303,7 +369,7 @@ if section == "📥 Queue":
         if st.button("Got it — hide guide", key="coach_off"):
             st.session_state._coach_off = True
             st.rerun()
-    st.markdown('<div class="panel"><div class="panel-h">Work queue</div>'
+    st.markdown('<div class="glass-panel"><div class="panel-h">Work queue</div>'
                 '<div class="panel-sub">Emergencies surface first. Accept, resolve or escalate in one click — '
                 'every action feeds the accountability report.</div></div>', unsafe_allow_html=True)
     tcol1, tcol2, tcol3 = st.columns([2, 1.2, 1])
@@ -388,7 +454,7 @@ elif section == "📊 Command":
                 .configure_view(stroke="transparent")
                 .configure_legend(labelColor="#c3c7d9", titleColor="#8b90a7"))
 
-    st.markdown('<div class="panel"><div class="panel-h">Accountability command</div>'
+    st.markdown('<div class="glass-panel"><div class="panel-h">Accountability command</div>'
                 '<div class="panel-sub">One story per visual — who breaches, where hotspots burn, '
                 'what the load looks like. Screenshot this for the Commissioner.</div></div>',
                 unsafe_allow_html=True)
@@ -496,13 +562,16 @@ else:
     with col_f:
         has_text = bool((st.session_state.get("my_text") or "").strip())
         s1 = "done" if has_text else ""
+        st.markdown('<div class="sect-head"><h2>✍️ File a Complaint</h2>'
+                    '<p>Describe, locate, add photo — the AI routes it to the right desk in under 3 seconds.</p></div>',
+                    unsafe_allow_html=True)
         st.markdown(f'''<div class="steps">
             <div class="step {s1}"><div class="dot">{'✓' if s1 else '1'}</div><div class="lbl">Describe</div><div class="bar"></div></div>
             <div class="step {'done' if st.session_state.get('loc_confirmed') else ''}"><div class="dot">{'✓' if st.session_state.get('loc_confirmed') else '2'}</div><div class="lbl">Locate</div><div class="bar"></div></div>
             <div class="step {'done' if st.session_state.get('_photo_done') else ''}"><div class="dot">{'✓' if st.session_state.get('_photo_done') else '3'}</div><div class="lbl">Photo</div><div class="bar"></div></div>
             <div class="step"><div class="dot">4</div><div class="lbl">Review</div></div>
           </div>''', unsafe_allow_html=True)
-        st.markdown('<div class="step-card"><h4>1 · Describe the problem</h4>'
+        st.markdown('<div class="step-card done-step"><h4>1 · Describe the problem</h4>'
                     '<div class="hint">Type, or speak — voice fills the box automatically. Hindi, Hinglish, English all work.</div></div>',
                     unsafe_allow_html=True)
         if "my_text" not in st.session_state:
@@ -545,7 +614,7 @@ else:
         my_text = st.text_area("Complaint", placeholder="e.g. paani nahi aa raha 3 din se ward 12",
                                height=110, key="my_text")
 
-        st.markdown('<div class="step-card"><h4>2 · Pin the location</h4>'
+        st.markdown('<div class="step-card done-step"><h4>2 · Pin the location</h4>'
                     '<div class="hint">One tap — phone GPS at full accuracy. Then confirm the address.</div></div>',
                     unsafe_allow_html=True)
         for k, v in [("my_lat", 22.7196), ("my_lon", 75.8577), ("my_ward_auto", ""),
@@ -661,7 +730,7 @@ else:
         my_ward = st.text_input("Ward number (auto-filled from map — editable)",
                                placeholder="e.g. 12", value=default_ward)
 
-        st.markdown('<div class="step-card"><h4>3 · Add photo proof <span style="color:#565b72">(optional)</span></h4>'
+        st.markdown('<div class="step-card done-step"><h4>3 · Add photo proof <span style="color:#565b72">(optional)</span></h4>'
                     '<div class="hint">Like Swachhata — a photo auto-detects the category and becomes resolution proof.</div></div>',
                     unsafe_allow_html=True)
         photo = st.file_uploader("📷 Add a photo — category detected automatically",
@@ -683,8 +752,8 @@ else:
         st.caption("Try: `kachra 4 din se` · `live wire fallen` · `pothole near bus stop`")
 
     with col_r:
-        st.markdown('<div class="step-card"><h4>4 · Review & route</h4>'
-                    '<div class="hint">Your verdict card appears here — department, officer, deadline, proof.</div></div>',
+        st.markdown('<div class="glass-panel"><h4>4 · Review & route</h4>'
+                    '<div class="hint" style="color:var(--muted)">Your verdict card appears here — department, officer, deadline, proof.</div></div>',
                     unsafe_allow_html=True)
         if go:
             st.session_state._reviewed = True
@@ -782,6 +851,7 @@ st.markdown("""
 </div>
 <div class="cta-bolt"><h2>Ready to clear the queue?</h2><p>Try it right here — no signup, no setup.</p></div>
 """, unsafe_allow_html=True)
+st.markdown('<div class="hero-form-wrap" style="max-width:500px;margin:0 auto;">', unsafe_allow_html=True)
 with st.form("cta_prompt"):
     cta_q = st.text_input("Quick file", key="cta_text", label_visibility="collapsed",
                           placeholder="Type a complaint… e.g. drain blocked, rain water logging")
@@ -793,6 +863,8 @@ if go_cta:
         st.rerun()
     else:
         st.warning("Type a complaint first.")
+st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div class="grad-divider"></div>', unsafe_allow_html=True)
 st.markdown("""
 <div class="foot-grid">
   <div><div class="fh">Console</div><div class="fl">Triage Queue</div><div class="fl">Command</div><div class="fl">File Complaint</div></div>
