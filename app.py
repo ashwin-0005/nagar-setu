@@ -557,64 +557,38 @@ else:
             st.session_state._voice_hash = None
         voice_lang = st.radio("Voice language", ["Hindi / Hinglish", "English"], horizontal=True)
         lang_code = "hi-IN" if voice_lang.startswith("Hindi") else "en-IN"
-        mic_audio = None
-        try:
-            mic_audio = st.audio_input("🎤 Speak your complaint", key="voice_input")
-        except Exception:
-            st.caption("Mic not supported here — use audio upload below.")
-        up_audio = st.file_uploader("Or upload audio (WAV best)", type=["wav", "mp3", "m4a", "ogg"])
-        import hashlib
-        from core.transcribe import transcribe_bytes, transcribe_upload
-        audio_data, audio_name, is_upload = None, "", False
-        if mic_audio is not None:
-            audio_data, audio_name = mic_audio.getvalue(), "mic.wav"
-        elif up_audio is not None:
-            audio_data, audio_name, is_upload = up_audio.getvalue(), up_audio.name, True
-        if audio_data:
-            h = hashlib.md5(audio_data).hexdigest()
-            if h != st.session_state._voice_hash:
-                with st.spinner("🎙️ Listening… converting voice to text"):
+        # 2 upload photo sections replacing audio
+        pcol1, pcol2 = st.columns(2)
+        with pcol1:
+            st.markdown('<div class="photo-uploader">', unsafe_allow_html=True)
+            st.markdown("**📷 Photo Upload 1**", unsafe_allow_html=True)
+            photo1 = st.file_uploader("Choose a photo", type=["jpg", "jpeg", "png", "webp"], key="photo_uploader_1")
+            if photo1 is not None:
+                st.image(photo1, caption="Photo 1 preview", width=300)
+                from core.vision import classify_photo
+                with st.spinner("👁️ Analyzing photo…"):
                     try:
-                        if is_upload:
-                            st.session_state.my_text = transcribe_upload(audio_data, audio_name, lang_code)
-                        else:
-                            st.session_state.my_text = transcribe_bytes(audio_data, lang_code)
-                        st.session_state._voice_hash = h
-                        st.success("Heard you! Text filled below — edit if needed.")
-                        st.rerun()
+                        photo_info_1 = classify_photo(photo1.getvalue())
+                        pico1 = CAT_ICON.get(photo_info_1["category"], "📷")
+                        st.info(f"{pico1} Detected: **{photo_info_1['category']}** ({photo_info_1['confidence']}) — {'; '.join(photo_info_1['reasons'])}")
                     except Exception as e:
-                        st.error(str(e))
-        if st.button("🗑️ Clear text", width="stretch"):
-            st.session_state.my_text = ""
-            st.session_state._voice_hash = None
-            st.rerun()
-        mic_col1, mic_col2 = st.columns([1, 5])
-        with mic_col1:
-            if st.button("🎤", key="mic_btn", type="primary",
-                            help="Click then speak into your microphone"):
-                st.session_state._voice_waiting = True
-        with mic_col2:
-            my_text = st.text_area("Complaint", placeholder="e.g. paani nahi aa raha 3 din se ward 12",
-                                   height=110, key="my_text")
-        if st.session_state.get("_voice_waiting"):
-            if mic_audio is not None:
-                import hashlib
-                audio_data = mic_audio.getvalue()
-                h = hashlib.md5(audio_data).hexdigest()
-                if h != st.session_state._voice_hash:
-                    with st.spinner("🎙️ Listening… converting voice to text"):
-                        from core.transcribe import transcribe_bytes
-                        try:
-                            st.session_state.my_text = transcribe_bytes(audio_data, lang_code)
-                            st.session_state._voice_hash = h
-                            st.success("Heard you! Text filled below — edit if needed.")
-                        except Exception as e:
-                            st.error(f"Voice failed: {e}")
-                st.session_state._voice_waiting = False
-        if st.session_state._voice_hash and st.session_state.my_text:
-            st.markdown('<div class="waveform">' + ''.join('<span></span>' for _ in range(7)) + '</div>',
-                        unsafe_allow_html=True)
-        st.caption("🎤 Or upload WAV/MP3 above · Click 🎤 to record live")
+                        st.warning(f"Photo analysis failed: {e}")
+            st.markdown('</div>', unsafe_allow_html=True)
+        with pcol2:
+            st.markdown('<div class="photo-uploader">', unsafe_allow_html=True)
+            st.markdown("**📷 Photo Upload 2**", unsafe_allow_html=True)
+            photo2 = st.file_uploader("Choose another photo", type=["jpg", "jpeg", "png", "webp"], key="photo_uploader_2")
+            if photo2 is not None:
+                st.image(photo2, caption="Photo 2 preview", width=300)
+                from core.vision import classify_photo
+                with st.spinner("👁️ Analyzing photo…"):
+                    try:
+                        photo_info_2 = classify_photo(photo2.getvalue())
+                        pico2 = CAT_ICON.get(photo_info_2["category"], "📷")
+                        st.info(f"{pico2} Detected: **{photo_info_2['category']}** ({photo_info_2['confidence']}) — {'; '.join(photo_info_2['reasons'])}")
+                    except Exception as e:
+                        st.warning(f"Photo analysis failed: {e}")
+            st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="step-card done-step"><h4>2 · Pin the location</h4>'
                     '<div class="hint">One tap — phone GPS at full accuracy. Then confirm the address.</div></div>',
