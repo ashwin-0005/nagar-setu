@@ -562,6 +562,23 @@ else:
         st.markdown("**📝 Describe your complaint**", unsafe_allow_html=True)
         my_text = st.text_area("Complaint", placeholder="e.g. paani nahi aa raha 3 din se ward 12", height=110, key="my_text")
         st.markdown('</div>', unsafe_allow_html=True)
+        # Complaint Register Bar
+        st.markdown('<div class="register-bar">', unsafe_allow_html=True)
+        if st.button("📋 Register Complaint", type="primary", width="stretch"):
+            if not my_text.strip() and photo_info is None:
+                st.warning("Write something or add a photo first.")
+            else:
+                # Register the complaint
+                st.session_state.complaint_registered = True
+                st.session_state.complaint_text = my_text.strip() if my_text.strip() else "Photo only"
+                st.session_state.complaint_photos = []
+                if photo1 is not None:
+                    st.session_state.complaint_photos.append("Photo 1")
+                if photo2 is not None:
+                    st.session_state.complaint_photos.append("Photo 2")
+                st.success(f"Complaint registered! {len(st.session_state.complaint_photos)} photo(s) attached.")
+                st.balloons()
+        st.markdown('</div>', unsafe_allow_html=True)
         # 2 upload photo sections
         pcol1, pcol2 = st.columns(2)
         with pcol1:
