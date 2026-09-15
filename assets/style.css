@@ -223,6 +223,31 @@ h1, h2, h3, .disp { font-family: 'Space Grotesk', 'Inter', sans-serif !important
 .step-card h4 { margin: 0 0 2px 0; font-size: 15px; color: #fff; font-family: 'Space Grotesk'; }
 .step-card .hint { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
 
+/* ── mic button + waveform ── */
+.mic-btn { display: inline-flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; border-radius: 50%; flex: 0 0 48px;
+  background: linear-gradient(135deg, rgba(139,124,255,.25), rgba(34,211,238,.25));
+  border: 2px solid rgba(139,124,255,.4); cursor: pointer;
+  font-size: 22px; transition: all .2s ease; position: relative; overflow: hidden; }
+.mic-btn:hover { border-color: var(--acc1); box-shadow: 0 0 20px rgba(139,124,255,.5); }
+.mic-btn.recording { background: linear-gradient(135deg, rgba(248,113,113,.4), rgba(251,191,36,.4));
+  border-color: var(--p1); animation: micPulse 1.2s ease-in-out infinite; }
+.mic-btn.recording::after { content: ""; position: absolute; inset: -4px; border-radius: 50%;
+  border: 2px solid var(--p1); animation: micRing 1.2s ease-in-out infinite; }
+@keyframes micPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes micRing { 0%,100% { opacity: .6; transform: scale(1); } 50% { opacity: 0; transform: scale(1.15); } }
+.waveform { display: flex; align-items: center; gap: 3px; height: 32px; }
+.waveform span { width: 3px; border-radius: 3px; background: var(--acc3);
+  animation: wave 1s ease-in-out infinite; }
+.waveform span:nth-child(1) { height: 8px; animation-delay: 0s; }
+.waveform span:nth-child(2) { height: 14px; animation-delay: .1s; }
+.waveform span:nth-child(3) { height: 20px; animation-delay: .2s; }
+.waveform span:nth-child(4) { height: 16px; animation-delay: .3s; }
+.waveform span:nth-child(5) { height: 10px; animation-delay: .4s; }
+.waveform span:nth-child(6) { height: 18px; animation-delay: .5s; }
+.waveform span:nth-child(7) { height: 12px; animation-delay: .6s; }
+@keyframes wave { 0%,100% { opacity: .3; transform: scaleY(.5); } 50% { opacity: 1; transform: scaleY(1); } }
+
 /* ── prompt-box inputs ── */
 .stTextArea textarea, .stTextInput input {
   background: rgba(255,255,255,.05) !important;
@@ -505,6 +530,21 @@ div[data-testid="stDataFrame"] { border: 1px solid var(--line); border-radius: v
 .empty .big { font-size: 42px; }
 .grad-text { background: linear-gradient(90deg, #c9c2ff, #f0abfc, #67e8f9);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ── breach register table ── */
+.breach-panel { overflow-x: auto; }
+.breach-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.breach-table th { text-align: left; font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: .6px; color: var(--faint); padding: 8px 6px;
+  border-bottom: 2px solid var(--line); white-space: nowrap; }
+.breach-table td { padding: 7px 6px; border-bottom: 1px solid rgba(255,255,255,.04);
+  color: var(--body); white-space: nowrap; }
+.breach-table tr:hover td { background: rgba(255,255,255,.03); }
+.breach-table .rank { font-family: 'JetBrains Mono'; font-weight: 800; color: var(--faint); width: 28px; }
+.breach-table .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; color: var(--body); }
+.breach-table span.pill { font-size: 10px; padding: 2px 8px; }
+.breach-table .sla-breach { animation: blink 2.2s ease-in-out infinite; }
+.breach-table .sla-ok { color: #6ee7b7; }
 
 /* ── mobile nav ── */
 @media (max-width: 768px) {

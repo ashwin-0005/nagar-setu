@@ -317,37 +317,6 @@ st.markdown(f"""
 </div>""", unsafe_allow_html=True)
 
 # ---------- BOLT-STYLE HERO ----------
-st.markdown(f"""
-<div class="hero-bolt"><div class="hero-glow"></div>
-  <h1>What will you fix today?</h1>
-  <p class="sub">Turn civic chaos into routed, SLA-tracked action — just describe it. Zone {zone} desk is live.</p>
-</div>
-""", unsafe_allow_html=True)
-# ---------- TRUST WALL ----------
-st.markdown('<div class="trust"><div class="t-lbl">Built for the departments that fix your city</div>'
-            '<div class="t-row">'
-            '<span class="t-item">🗑️ Sanitation</span><span class="t-item">💧 Water</span>'
-            '<span class="t-item">🛣️ Roads</span><span class="t-item">💡 Electrical</span>'
-            '<span class="t-item">🚽 Sewerage</span><span class="t-item">🌧️ Drainage</span>'
-            '<span class="t-item">🧾 Revenue</span></div></div>', unsafe_allow_html=True)
-
-# ---------- LIVE TICKER ----------
-tick_items = (f"P1 CRITICAL <b>{n_p1}</b> &nbsp;·&nbsp; <span class='up'>{p1_breach} breached</span>"
-              f" &nbsp;&nbsp; P2 MODERATE <b>{n_p2}</b> &nbsp;&nbsp; P3 ROUTINE <b>{n_p3}</b>"
-              f" &nbsp;&nbsp; OPEN <b>{n_open}</b> &nbsp;&nbsp; RESOLVED <b class='down'>{n_resolved}</b>"
-              f" &nbsp;&nbsp; DUPLICATES MERGED <b>{n_dupe}</b> &nbsp;&nbsp; SLA BREACH <b class='up'>{n_breach}</b>")
-st.markdown(f'<div class="ticker"><div class="ticker-track"><span>{tick_items}</span>'
-            f'<span>{tick_items}</span></div></div>', unsafe_allow_html=True)
-
-# ---------- KPI WALL ----------
-c1, c2, c3, c4, c5 = st.columns(5)
-kpi(c1, "🔴 P1 · Critical", n_p1,
-    f"<b class='up'>{p1_breach} breached</b> — fix first" if p1_breach else "zero breached · holding", "red", "🚨")
-kpi(c2, "🟡 P2 · Moderate", n_p2, f"{n_p2 / n_all * 100:.0f}% of queue · within SLA", "amber", "👁️")
-kpi(c3, "🟢 P3 · Routine", n_p3, f"{n_p3 / n_all * 100:.0f}% of queue · lowest urgency", "green", "📋")
-kpi(c4, "⏰ SLA breached", n_breach, f"of {n_open} still open · auto-escalated", "red", "⏱️")
-kpi(c5, "🔁 Duplicates merged", n_dupe, f"<b class='down'>{n_dupe} repeat visits saved</b>", "indigo", "🧬")
-
 # ================= QUEUE =================
 if section == "📥 Queue":
     if st.session_state.get("density") == "Compact":
@@ -424,6 +393,7 @@ if section == "📥 Queue":
                          unsafe_allow_html=True)
             rc2.markdown(
                 f'<div class="tmeta"><span>🏷️ Ward <b>{r["ward"] or "unknown"}</b></span>'
+                f'<span>📅 Filed <b class="mono">{str(r["created_at"])[:10]}</b></span>'
                 f'<span>⏰ Due <b class="mono">{str(r["sla_due"])[:16]}</b></span>'
                 f'<span><span class="avatar">{initial}</span>{r["officer_name"]} '
                 f'<span style="color:#8b90a7">({r["officer_id"]})</span></span></div>'
@@ -519,9 +489,40 @@ elif section == "📊 Command":
         wdf = df.groupby("ward").size().reset_index(name="count").sort_values("count", ascending=False).head(8)
         mxw = max(wdf["count"].max(), 1)
         wrows = [(i + 1, f"Ward {rr['ward'] or '?'}", f"{rr['count']} tickets",
-                  int(rr["count"]), rr["count"] / mxw, i < 2)
-                 for i, (_, rr) in enumerate(wdf.iterrows())]
+                   int(rr["count"]), rr["count"] / mxw, i < 2)
+                  for i, (_, rr) in enumerate(wdf.iterrows())]
         st.markdown(lboard(["#", "WARD", "COUNT"], wrows), unsafe_allow_html=True)
+
+    # ---------- BREACH LIST TABLE ----------
+    bdf = df[df["is_breach"]].sort_values(["priority", "created_at"], ascending=[True, True])
+    st.markdown('<div class="panel breach-panel"><div class="panel-h">🚨 Breach Register</div>'
+                '<div class="panel-sub">Every overdue ticket — complaint date, deadline, officer, status.</div></div>',
+                unsafe_allow_html=True)
+    if bdf.empty:
+        st.markdown('<div class="empty"><div class="big">✅</div>No breaches. Queue is clear.</div>',
+                    unsafe_allow_html=True)
+    else:
+        bhdr = """<table class="breach-table"><thead><tr>
+          <th>#</th><th>ID</th><th>COMPLAINT DATE</th><th>DUE</th>
+          <th>PRIORITY</th><th>CATEGORY</th><th>WARD</th><th>DEPT</th><th>OFFICER</th><th>STATUS</th>
+        </tr></thead><tbody>"""
+        for i, (_, r) in enumerate(bdf.iterrows()):
+            pcls = {"P1": "p1", "P2": "p2"}.get(r.get("priority", "P3"), "p3")
+            stt = sla_state(r, now)
+            status_lbl = stt["breached"] and "⏰ BREACH" or (stt["left"] >= 0 and f"{stt['left']:.0f}h") or "OK"
+            status_cls = "sla-breach" if stt["breached"] else "sla-ok"
+            bhdr += (f"<tr><td class='rank'>{i+1:02d}</td>"
+                     f"<td class='mono'>{r['id']}</td>"
+                     f"<td class='mono' style='font-size:11.5px'>{str(r['created_at'])[:10]}</td>"
+                     f"<td class='mono' style='font-size:11.5px'>{str(r['sla_due'])[:16]}</td>"
+                     f"<td><span class='pill {pcls}'>{r['priority']}</span></td>"
+                     f"<td>{r['pred_category']}</td>"
+                     f"<td>Ward {r['ward']}</td>"
+                     f"<td>{r['dept']}</td>"
+                     f"<td>{r['officer_name']}</td>"
+                     f"<td><span class='pill {status_cls}'>{status_lbl}</span></td></tr>")
+        bhdr += "</tbody></table>"
+        st.markdown(bhdr, unsafe_allow_html=True)
 
     st.markdown('<div class="panel"><div class="panel-h">🗺️ Live hotspot map</div>'
                 '<div class="panel-sub">Satellite ops view — dot color = priority. Red zones need crews first.</div></div>',
@@ -572,7 +573,7 @@ else:
             <div class="step"><div class="dot">4</div><div class="lbl">Review</div></div>
           </div>''', unsafe_allow_html=True)
         st.markdown('<div class="step-card done-step"><h4>1 · Describe the problem</h4>'
-                    '<div class="hint">Type, or speak — voice fills the box automatically. Hindi, Hinglish, English all work.</div></div>',
+                    '<div class="hint">Type, or press the mic to speak — voice fills the box automatically. Hindi, Hinglish, English all work.</div></div>',
                     unsafe_allow_html=True)
         if "my_text" not in st.session_state:
             st.session_state.my_text = ""
@@ -582,7 +583,7 @@ else:
         lang_code = "hi-IN" if voice_lang.startswith("Hindi") else "en-IN"
         mic_audio = None
         try:
-            mic_audio = st.audio_input("🎤 Speak your complaint")
+            mic_audio = st.audio_input("🎤 Speak your complaint", key="voice_input")
         except Exception:
             st.caption("Mic not supported here — use audio upload below.")
         up_audio = st.file_uploader("Or upload audio (WAV best)", type=["wav", "mp3", "m4a", "ogg"])
@@ -611,8 +612,33 @@ else:
             st.session_state.my_text = ""
             st.session_state._voice_hash = None
             st.rerun()
-        my_text = st.text_area("Complaint", placeholder="e.g. paani nahi aa raha 3 din se ward 12",
-                               height=110, key="my_text")
+        mic_col1, mic_col2 = st.columns([1, 5])
+        with mic_col1:
+            if st.button("🎤", key="mic_btn", type="primary",
+                            help="Click then speak into your microphone"):
+                st.session_state._voice_waiting = True
+        with mic_col2:
+            my_text = st.text_area("Complaint", placeholder="e.g. paani nahi aa raha 3 din se ward 12",
+                                   height=110, key="my_text")
+        if st.session_state.get("_voice_waiting"):
+            if mic_audio is not None:
+                import hashlib
+                audio_data = mic_audio.getvalue()
+                h = hashlib.md5(audio_data).hexdigest()
+                if h != st.session_state._voice_hash:
+                    with st.spinner("🎙️ Listening… converting voice to text"):
+                        from core.transcribe import transcribe_bytes
+                        try:
+                            st.session_state.my_text = transcribe_bytes(audio_data, lang_code)
+                            st.session_state._voice_hash = h
+                            st.success("Heard you! Text filled below — edit if needed.")
+                        except Exception as e:
+                            st.error(f"Voice failed: {e}")
+                st.session_state._voice_waiting = False
+        if st.session_state._voice_hash and st.session_state.my_text:
+            st.markdown('<div class="waveform">' + ''.join('<span></span>' for _ in range(7)) + '</div>',
+                        unsafe_allow_html=True)
+        st.caption("🎤 Or upload WAV/MP3 above · Click 🎤 to record live")
 
         st.markdown('<div class="step-card done-step"><h4>2 · Pin the location</h4>'
                     '<div class="hint">One tap — phone GPS at full accuracy. Then confirm the address.</div></div>',
