@@ -557,6 +557,11 @@ else:
             st.session_state._voice_hash = None
         voice_lang = st.radio("Voice language", ["Hindi / Hinglish", "English"], horizontal=True)
         lang_code = "hi-IN" if voice_lang.startswith("Hindi") else "en-IN"
+        # Complaint text area
+        st.markdown('<div class="photo-uploader" style="margin-bottom:16px">', unsafe_allow_html=True)
+        st.markdown("**📝 Describe your complaint**", unsafe_allow_html=True)
+        my_text = st.text_area("Complaint", placeholder="e.g. paani nahi aa raha 3 din se ward 12", height=110, key="my_text")
+        st.markdown('</div>', unsafe_allow_html=True)
         # 2 upload photo sections replacing audio
         pcol1, pcol2 = st.columns(2)
         with pcol1:
