@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
-from core.auth import validate_user, create_user, init_users
 from core.pipeline import run_pipeline
 from core.classifier import predict
 from core.urgency import score as urgency_score, priority as priority_fn
@@ -10,43 +9,6 @@ from core.router import load_refs, route
 from datetime import datetime
 
 st.set_page_config(page_title="Nagar Setu — Zone Desk Copilot", page_icon="🏛️", layout="wide")
-
-# ---------- AUTH ----------
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if not st.session_state.logged_in:
-    init_users()
-    st.title("🏛️ Nagar Setu")
-    st.caption("Zone desk copilot — sign in to continue")
-    auth_tab1, auth_tab2 = st.tabs(["🔑 Sign In", "📝 Sign Up"])
-    with auth_tab1:
-        u = st.text_input("Email", key="auth_user")
-        p = st.text_input("Password", type="password", key="auth_pass")
-        if st.button("Sign In", type="primary", width="stretch"):
-            if validate_user(u, p):
-                st.session_state.logged_in = True
-                st.session_state.section = "📥 Queue"
-                st.rerun()
-            else:
-                st.error("Invalid credentials")
-with auth_tab2:
-        nu = st.text_input("Email", key="auth_new_user")
-        np_ = st.text_input("Password", type="password", key="auth_new_pass")
-        np2 = st.text_input("Confirm Password", type="password", key="auth_new_pass2")
-        if st.button("Create Account", type="primary", width="stretch"):
-            if not nu or not np_:
-                st.warning("Fill in both fields")
-            elif np_ != np2:
-                st.error("Passwords don't match")
-            elif not _is_valid_email(nu):
-                st.warning("Enter a valid email address")
-            elif create_user(nu, np_):
-                st.success("Account created! Sign in with your new credentials.")
-            else:
-                st.error("Email already exists")
-
-if not st.session_state.logged_in:
-    st.stop()
 
 # ---------- DESIGN SYSTEM ----------
 _CSS_PATH = os.path.join(os.path.dirname(__file__), "assets", "style.css")
