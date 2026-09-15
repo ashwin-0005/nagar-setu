@@ -1,0 +1,51 @@
+id,raw_text,ward,created_at,true_category
+C001,kachra 4 din se nahi utha ward 12 Patel nagar,12,2026-09-10T04:13:41.623111,garbage
+C002,garbage pile near Patel Nagar gate ward 12 photo attached,12,2026-09-13T10:13:41.623111,garbage
+C003,kachra pada hai gali me 3 din se ward 11,11,2026-09-09T04:13:41.623111,garbage
+C004,dustbin overflow near market ward 12,12,2026-09-09T07:13:41.623111,garbage
+C005,paani nahi aa raha 3 din se ward 12,12,2026-09-15T12:13:41.623111,water
+C006,water pipeline leakage near park ward 10,10,2026-09-09T11:13:41.623111,water
+C007,nal me ganda paani aa raha hai ward 12,12,2026-09-13T04:13:41.623111,water
+C008,no water supply since morning ward 10,10,2026-09-12T10:13:41.623111,water
+C009,sewer overflow on main road ward 12 urgent,12,2026-09-13T03:13:41.623111,sewer
+C010,nali ka paani road par beh raha hai ward 12,12,2026-09-10T11:13:41.623111,sewer
+C011,sewer block near house 45 ward 12 bad smell,12,2026-09-12T01:13:41.623111,sewer
+C012,drain blocked rain water logging ward 12,12,2026-09-10T12:13:41.623111,drainage
+C013,naali jaam barish ka paani bhara ward 11,11,2026-09-11T03:13:41.623111,drainage
+C014,streetlight not working 5 days ward 12,12,2026-09-15T05:13:41.623111,streetlight
+C015,street light flicker near school ward 10,10,2026-09-12T05:13:41.623111,streetlight
+C016,live wire fallen on road ward 12 EMERGENCY,12,2026-09-11T05:13:41.623111,streetlight
+C017,pothole on main road near bus stop ward 12,12,2026-09-13T11:13:41.623111,road
+C018,pothole on main road near bus stop ward 12,12,2026-09-10T06:13:41.623111,road
+C019,road broken after rain ward 11,11,2026-09-10T05:13:41.623111,road
+C020,property tax bill wrong ward 12,12,2026-09-13T10:13:41.623111,property-tax
+C021,stray dogs menace ward 10,10,2026-09-15T01:13:41.623111,other
+C022,,,2026-09-13T06:13:41.623111,other
+C023,photo only,12,2026-09-13T03:13:41.623111,garbage
+C024,kachra 4 din se nahi utha ward 12 Patel nagar,12,2026-09-13T08:13:41.623111,garbage
+C025,kachra 4 din se nahi utha ward 12 Patel nagar,12,2026-09-10T03:13:41.623111,garbage
+C026,garbage pile near Patel Nagar gate ward 12 photo attached,12,2026-09-13T06:13:41.623111,garbage
+C027,kachra pada hai gali me 3 din se ward 11,11,2026-09-10T00:13:41.623111,garbage
+C028,dustbin overflow near market ward 12,12,2026-09-10T01:13:41.623111,garbage
+C029,paani nahi aa raha 3 din se ward 12,12,2026-09-09T10:13:41.623111,water
+C030,water pipeline leakage near park ward 10,10,2026-09-14T11:13:41.623111,water
+C031,nal me ganda paani aa raha hai ward 12,12,2026-09-11T12:13:41.623111,water
+C032,no water supply since morning ward 10,10,2026-09-12T10:13:41.623111,water
+C033,sewer overflow on main road ward 12 urgent,12,2026-09-10T05:13:41.623111,sewer
+C034,nali ka paani road par beh raha hai ward 12,12,2026-09-11T05:13:41.623111,sewer
+C035,pothole on main road near bus stop ward 12,12,2026-09-10T11:13:41.623111,road
+C036,drain blocked rain water logging ward 12,12,2026-09-14T01:13:41.623111,drainage
+C037,naali jaam barish ka paani bhara ward 11,11,2026-09-10T00:13:41.623111,drainage
+C038,streetlight not working 5 days ward 12,12,2026-09-15T02:13:41.623111,streetlight
+C039,street light flicker near school ward 10,10,2026-09-13T01:13:41.623111,streetlight
+C040,live wire fallen on road ward 12 EMERGENCY,12,2026-09-10T09:13:41.623111,streetlight
+C041,pothole on main road near bus stop ward 12,12,2026-09-10T03:13:41.623111,road
+C042,sadak me gaddha bike gir gaya ward 12,12,2026-09-12T10:13:41.623111,road
+C043,road broken after rain ward 11,11,2026-09-14T03:13:41.623111,road
+C044,property tax bill wrong ward 12,12,2026-09-12T00:13:41.623111,property-tax
+C045,stray dogs menace ward 10,10,2026-09-11T08:13:41.623111,other
+C046,,,2026-09-10T09:13:41.623111,other
+C047,kachra 4 din se nahi utha ward 12 Patel nagar,12,2026-09-12T07:13:41.623111,garbage
+C048,paani,,2026-09-09T08:13:41.623111,water
+C049,,,2026-09-13T02:13:41.623111,garbage
+C050,photo only,12,2026-09-14T00:13:41.623111,garbage

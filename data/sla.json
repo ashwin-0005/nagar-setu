@@ -1,0 +1,1 @@
+{"garbage": {"hours": 24, "dept": "Sanitation"}, "water": {"hours": 24, "dept": "Water Supply"}, "sewer": {"hours": 24, "dept": "Sewerage"}, "drainage": {"hours": 48, "dept": "Drainage"}, "streetlight": {"hours": 48, "dept": "Electrical"}, "road": {"hours": 168, "dept": "Roads"}, "property-tax": {"hours": 168, "dept": "Revenue"}, "other": {"hours": 72, "dept": "General Admin"}}
