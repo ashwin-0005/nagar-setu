@@ -562,6 +562,43 @@ else:
         st.markdown("**📝 Describe your complaint**", unsafe_allow_html=True)
         my_text = st.text_area("Complaint", placeholder="e.g. paani nahi aa raha 3 din se ward 12", height=110, key="my_text")
         st.markdown('</div>', unsafe_allow_html=True)
+        # Voice input section
+        st.markdown('<div class="photo-uploader" style="margin-bottom:16px;margin-top:16px">', unsafe_allow_html=True)
+        st.markdown("**🎤 Voice Input**", unsafe_allow_html=True)
+        voice_lang = st.radio("Voice language", ["Hindi / Hinglish", "English"], horizontal=True)
+        lang_code = "hi-IN" if voice_lang.startswith("Hindi") else "en-IN"
+        mic_audio = None
+        try:
+            mic_audio = st.audio_input("🎤 Speak your complaint", key="voice_input")
+        except Exception:
+            st.caption("Mic not supported here — use upload below.")
+        up_audio = st.file_uploader("Or upload audio (WAV best)", type=["wav", "mp3", "m4a", "ogg"], key="audio_upload")
+        import hashlib
+        from core.transcribe import transcribe_bytes, transcribe_upload
+        audio_data, audio_name, is_upload = None, "", False
+        if mic_audio is not None:
+            audio_data, audio_name = mic_audio.getvalue(), "mic.wav"
+        elif up_audio is not None:
+            audio_data, audio_name, is_upload = up_audio.getvalue(), up_audio.name, True
+        if audio_data:
+            h = hashlib.md5(audio_data).hexdigest()
+            if h != st.session_state._voice_hash:
+                with st.spinner("🎙️ Listening… converting voice to text"):
+                    try:
+                        if is_upload:
+                            st.session_state.my_text = transcribe_upload(audio_data, audio_name, lang_code)
+                        else:
+                            st.session_state.my_text = transcribe_bytes(audio_data, lang_code)
+                        st.session_state._voice_hash = h
+                        st.success("Heard you! Text filled below — edit if needed.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(str(e))
+        if st.button("🗑️ Clear text", width="stretch"):
+            st.session_state.my_text = ""
+            st.session_state._voice_hash = None
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
         # 2 upload photo sections replacing audio
         pcol1, pcol2 = st.columns(2)
         with pcol1:
