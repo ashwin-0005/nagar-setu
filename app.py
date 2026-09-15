@@ -29,7 +29,7 @@ if not st.session_state.logged_in:
                 st.rerun()
             else:
                 st.error("Invalid credentials")
-    with auth_tab2:
+with auth_tab2:
         nu = st.text_input("Email", key="auth_new_user")
         np_ = st.text_input("Password", type="password", key="auth_new_pass")
         np2 = st.text_input("Confirm Password", type="password", key="auth_new_pass2")
@@ -44,6 +44,9 @@ if not st.session_state.logged_in:
                 st.success("Account created! Sign in with your new credentials.")
             else:
                 st.error("Email already exists")
+
+if not st.session_state.logged_in:
+    st.stop()
 
 # ---------- DESIGN SYSTEM ----------
 _CSS_PATH = os.path.join(os.path.dirname(__file__), "assets", "style.css")
