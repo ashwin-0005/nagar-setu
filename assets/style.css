@@ -57,23 +57,38 @@ h1, h2, h3, .disp { font-family: 'Space Grotesk', 'Inter', sans-serif !important
 }
 
 /* ── slim top nav ── */
-.bnav { display: flex; align-items: center; gap: 22px; padding: 14px 6px; margin-bottom: 6px; }
-.bnav .brand { display: flex; align-items: center; gap: 12px; }
-.bnav .brand-mark { width: 42px; height: 42px; border-radius: 14px; flex: 0 0 42px;
+.bnav { display: flex; align-items: center; gap: 14px; padding: 10px 6px; margin-bottom: 6px; }
+.bnav-brand { display: flex; align-items: center; gap: 10px; }
+.bnav-brand .brand-mark { width: 36px; height: 36px; border-radius: 12px; flex: 0 0 36px;
   background: var(--grad); display: flex; align-items: center; justify-content: center;
-  font-size: 21px; box-shadow: 0 4px 22px rgba(192,132,252,.55); }
-.bnav .brand-name { font-family: 'Space Grotesk'; font-weight: 700; font-size: 20px;
+  font-size: 19px; box-shadow: 0 4px 22px rgba(192,132,252,.55); }
+.bnav-brand .brand-name { font-family: 'Space Grotesk'; font-weight: 700; font-size: 18px;
   letter-spacing: -.5px; background: linear-gradient(90deg, #fff, #c9c2ff 60%, #f0abfc);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
-.bnav .links { display: flex; gap: 6px; margin-left: 16px; }
+.bnav .links { display: flex; gap: 6px; margin-left: 16px; flex: 1; }
 .bnav .links span { font-size: 13.5px; font-weight: 500; color: var(--body);
   padding: 8px 14px; border-radius: var(--r-sm); cursor: pointer;
   transition: all .2s ease; }
 .bnav .links span:hover { color: #fff; background: rgba(255,255,255,.06); }
 .bnav .links span.active { color: #fff; background: rgba(139,124,255,.2);
   border: 1px solid rgba(139,124,255,.35); }
-.bnav .cta-row { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.bnav-cta { margin-left: auto; display: flex; gap: 10px; align-items: center; }
 .bnav .signin { font-size: 13.5px; font-weight: 600; color: var(--body); }
+
+/* ── nav column buttons (Streamlit st.button in cols) ── */
+[data-testid="stButton"] .stButton { width: 100%; }
+/* style the nav buttons to look like tab links */
+._nav_button { /* placeholder for nav button styling */ }
+
+/* ── login form ── */
+.login-card { max-width: 400px; margin: 40px auto; padding: 36px;
+  border-radius: var(--r-lg); background: rgba(255,255,255,.04);
+  border: 1px solid var(--line); backdrop-filter: blur(12px); }
+.login-card h1 { text-align: center; margin-bottom: 4px;
+  background: var(--grad); -webkit-background-clip: text;
+  background-clip: text; color: transparent; font-family: 'Space Grotesk'; }
+.login-card .sub { text-align: center; color: var(--muted); margin-bottom: 28px; }
+.login-card .stButton { width: 100%; margin-top: 8px; }
 
 /* ── nav buttons (replaces Streamlit columns) ── */
 .nav-btn { display: inline-flex; align-items: center; justify-content: center;
@@ -548,15 +563,12 @@ div[data-testid="stDataFrame"] { border: 1px solid var(--line); border-radius: v
 
 /* ── mobile nav ── */
 @media (max-width: 768px) {
-  [data-testid="stRadio"] [role="radiogroup"] { overflow-x: auto; flex-wrap: nowrap;
-    scrollbar-width: none; }
-  [data-testid="stRadio"] [role="radiogroup"]::-webkit-scrollbar { display: none; }
-  [data-testid="stRadio"] label { flex: 0 0 auto; min-width: 118px; }
+  .bnav-brand .brand-name { display: none; }
+  .bnav-cta span:last-child { display: none; }
   .kpi .k-value { font-size: 26px; }
-  .nav-btn { padding: 7px 12px; font-size: 12px; }
   .step .lbl { display: none; }
   .value-row { flex-direction: column; }
-  .bnav { flex-wrap: wrap; gap: 10px; }
+  .bnav { flex-wrap: wrap; gap: 6px; }
   .bnav .links { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {

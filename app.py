@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
+from core.auth import validate_user, create_user, init_users
 from core.pipeline import run_pipeline
 from core.classifier import predict
 from core.urgency import score as urgency_score, priority as priority_fn
@@ -9,6 +10,40 @@ from core.router import load_refs, route
 from datetime import datetime
 
 st.set_page_config(page_title="Nagar Setu — Zone Desk Copilot", page_icon="🏛️", layout="wide")
+
+# ---------- AUTH ----------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if not st.session_state.logged_in:
+    init_users()
+    st.title("🏛️ Nagar Setu")
+    st.caption("Zone desk copilot — sign in to continue")
+    auth_tab1, auth_tab2 = st.tabs(["🔑 Sign In", "📝 Sign Up"])
+    with auth_tab1:
+        u = st.text_input("Username", key="auth_user")
+        p = st.text_input("Password", type="password", key="auth_pass")
+        if st.button("Sign In", type="primary", width="stretch"):
+            if validate_user(u, p):
+                st.session_state.logged_in = True
+                st.session_state.section = "📥 Queue"
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
+    with auth_tab2:
+        nu = st.text_input("New Username", key="auth_new_user")
+        np_ = st.text_input("New Password", type="password", key="auth_new_pass")
+        np2 = st.text_input("Confirm Password", type="password", key="auth_new_pass2")
+        if st.button("Create Account", type="primary", width="stretch"):
+            if not nu or not np_:
+                st.warning("Fill in both fields")
+            elif np_ != np2:
+                st.error("Passwords don't match")
+            elif len(nu) < 3:
+                st.warning("Username at least 3 characters")
+            elif create_user(nu, np_):
+                st.success("Account created! Sign in with your new credentials.")
+            else:
+                st.error("Username already exists")
 
 # ---------- DESIGN SYSTEM ----------
 _CSS_PATH = os.path.join(os.path.dirname(__file__), "assets", "style.css")
@@ -158,6 +193,10 @@ with st.sidebar:
                        help="Compact hides reasoning lines — Linear-style dense triage.")
     st.divider()
     st.caption("MVP · 1 zone · 8 categories · Rules + TF-IDF (offline)")
+    if st.button("🚪 Sign Out", type="secondary", width="stretch"):
+        st.session_state.logged_in = False
+        st.session_state.pop("section", None)
+        st.rerun()
 
 
 @st.cache_data(show_spinner="Sorting complaints…")
@@ -194,15 +233,10 @@ n_all = max(len(df), 1)
 p1_breach = int(((df["priority"] == "P1") & (df["is_breach"])).sum())
 n_resolved = int((df["status"] == "resolved").sum())
 
-# ---------- SECTION SELECTOR (must come before nav/hero for f-string refs) ----------
-st.markdown("""
-<style>
-/* Hide the raw radio widget visually — nav links handle selection via JS */
-[data-testid="stRadio"] { display: none !important; }
-</style>""", unsafe_allow_html=True)
-section = st.radio("Section", ["📥 Queue", "📊 Command", "✍️ File"], horizontal=True,
-                    label_visibility="collapsed", key="section")
-# ---------- PROGRESS BAR ----------
+# ---------- SECTION NAV ----------
+if "section" not in st.session_state:
+    st.session_state.section = "📥 Queue"
+
 st.markdown("""
 <div class="progress-bar" id="topProgress"></div>
 <script>
@@ -215,24 +249,19 @@ st.markdown("""
 })();
 </script>""", unsafe_allow_html=True)
 
-# ---------- BOLT-STYLE TOP NAV ----------
-st.markdown(f"""
-<div class="bnav">
-  <div class="brand">
-    <div class="brand-mark">🏛️</div>
-    <div class="brand-name">Nagar Setu</div>
-  </div>
-  <div class="links">
-    <span class="{'active' if section=='📥 Queue' else ''}" onclick="document.querySelector('[data-testid=\\"stRadio\\"] input[value=\\"📥 Queue\\"]')?.click()">📥 Queue</span>
-    <span class="{'active' if section=='📊 Command' else ''}" onclick="document.querySelector('[data-testid=\\"stRadio\\"] input[value=\\"📊 Command\\"]')?.click()">📊 Command</span>
-    <span class="{'active' if section=='✍️ File' else ''}" onclick="document.querySelector('[data-testid=\\"stRadio\\"] input[value=\\"✍️ File\\"]')?.click()">✍️ File</span>
-  </div>
-  <div class="cta-row">
-    <span class="pulse-dot"></span>
-    <span style="font-size:11.5px;color:#6ee7b7;font-weight:600">Zone {zone} LIVE</span>
-  </div>
-</div>""", unsafe_allow_html=True)
-st.markdown('<script>document.querySelectorAll("[data-sec]").forEach(function(e){e.addEventListener("click",function(){var t=this.getAttribute("data-sec");document.querySelectorAll("[data-testid=\"stRadio\"] input[type=\"radio\"]").forEach(function(e){if(e.value===t)e.checked=true})})});</script>', unsafe_allow_html=True)
+section = st.session_state.section
+ncol = st.columns([1.2, 5.6, 1.2])
+with ncol[0]:
+    st.markdown('<div class="bnav-brand"><div class="brand-mark">🏛️</div><div class="brand-name">Nagar Setu</div></div>', unsafe_allow_html=True)
+with ncol[1]:
+    _nc1, _nc2, _nc3 = st.columns(3)
+    _secs = ["📥 Queue", "📊 Command", "✍️ File"]
+    for _c, _s in zip([_nc1, _nc2, _nc3], _secs):
+        if _c.button(_s, key=f"_nav_{_s}", use_container_width=True):
+            st.session_state.section = _s
+            st.rerun()
+with ncol[2]:
+    st.markdown('<div class="bnav-cta"><span class="pulse-dot"></span><span style="font-size:11.5px;color:#6ee7b7;font-weight:600">Zone {zone} LIVE</span></div>', unsafe_allow_html=True)
 
 # ---------- BOLT-STYLE HERO ----------
 st.markdown(f"""
@@ -297,24 +326,6 @@ kpi(c3, "🟢 P3 · Routine", n_p3, f"{n_p3 / n_all * 100:.0f}% of queue · lowe
 kpi(c4, "⏰ SLA breached", n_breach, f"of {n_open} still open · auto-escalated", "red", "⏱️")
 kpi(c5, "🔁 Duplicates merged", n_dupe, f"<b class='down'>{n_dupe} repeat visits saved</b>", "indigo", "🧬")
 
-
-# ---------- BOLT-STYLE TOP NAV ----------
-st.markdown(f"""
-<div class="bnav">
-  <div class="brand">
-    <div class="brand-mark">🏛️</div>
-    <div class="brand-name">Nagar Setu</div>
-  </div>
-  <div class="links">
-    <span class="{'active' if section=='📥 Queue' else ''}" data-sec="📥 Queue">📥 Queue</span>
-    <span class="{'active' if section=='📊 Command' else ''}" data-sec="📊 Command">📊 Command</span>
-    <span class="{'active' if section=='✍️ File' else ''}" data-sec="✍️ File">✍️ File</span>
-  </div>
-  <div class="cta-row">
-    <span class="pulse-dot"></span>
-    <span style="font-size:11.5px;color:#6ee7b7;font-weight:600">Zone {zone} LIVE</span>
-  </div>
-</div>""", unsafe_allow_html=True)
 
 # ---------- BOLT-STYLE HERO ----------
 # ================= QUEUE =================
@@ -875,7 +886,7 @@ st.markdown("""
   <div class="feat"><div class="f-ico">🏛️</div><div class="f-t">Commissioner</div><div class="f-d">Breach leaderboard + hotspot map. Accountability, screenshot-ready.</div></div>
   <div class="feat"><div class="f-ico">🧍</div><div class="f-t">Citizen</div><div class="f-d">Describe, speak or snap — get department, officer and deadline instantly.</div></div>
 </div>
-<div class="cta-bolt"><h2>Ready to clear the queue?</h2><p>Try it right here — no signup, no setup.</p></div>
+<div class="cta-bolt"><h2>Ready to clear the queue?</h2><p>Sign in above to get started — no setup needed.</p></div>
 """, unsafe_allow_html=True)
 st.markdown('<div class="hero-form-wrap" style="max-width:500px;margin:0 auto;">', unsafe_allow_html=True)
 with st.form("cta_prompt"):
